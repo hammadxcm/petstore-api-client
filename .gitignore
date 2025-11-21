@@ -1,0 +1,67 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+
+# rspec failure tracking
+.rspec_status
+
+# Built gems
+/*.gem
+*.gemspec.lock
+
+# OS-specific
+.DS_Store
+
+# Editor temp files
+*.swp
+*.swo
+*~
+
+# Environment files (IMPORTANT: Never commit secrets!)
+.env
+.env.*
+!.env.example
+
+# Credentials and secrets
+config/credentials.yml.enc
+config/master.key
+config/secrets.yml
+*.pem
+*.key
+*.crt
+
+# OAuth2 credentials (if stored locally)
+oauth2_credentials.json
+client_secret*.json
+credentials.json
+
+# API keys and tokens
+api_keys.yml
+tokens.yml
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# RubyMine
+.rakeTasks
+
+# Log files
+*.log
+log/
+logs/
+
+# Database files (if any)
+*.sqlite3
+*.db
+
+# Backup files
+*.bak
+*.backup
