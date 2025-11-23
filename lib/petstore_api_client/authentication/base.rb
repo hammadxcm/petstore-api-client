@@ -99,7 +99,7 @@ module PetstoreApiClient
       def mask_credential(value, visible_chars = 3)
         return "***" if value.length <= visible_chars
 
-        "#{value[0...visible_chars]}#{'*' * (value.length - visible_chars)}"
+        "#{value[0...visible_chars]}#{"*" * (value.length - visible_chars)}"
       end
 
       # Standard inspect message for unconfigured authenticators

@@ -34,9 +34,11 @@ module ResponseFactory
   # @param category [Hash, nil] Category data
   # @param tags [Array<Hash>, nil] Tag data
   # @return [Double] Mock response with pet data
+  # rubocop:disable Metrics/ParameterLists
   def build_pet_response(id: 123, name: "Fluffy", status: "available",
                          photo_urls: ["https://example.com/fluffy.jpg"],
                          category: nil, tags: nil)
+    # rubocop:enable Metrics/ParameterLists
     body = {
       "id" => id,
       "name" => name,

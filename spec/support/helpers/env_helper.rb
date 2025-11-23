@@ -51,7 +51,9 @@ module EnvHelper
   #   after do
   #     clear_env("API_KEY")
   #   end
+  # rubocop:disable Naming/AccessorMethodName
   def set_env(env_vars)
+    # rubocop:enable Naming/AccessorMethodName
     env_vars.each do |key, value|
       if value.nil?
         ENV.delete(key)

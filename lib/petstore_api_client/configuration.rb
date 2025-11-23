@@ -26,6 +26,7 @@ module PetstoreApiClient
   #   end
   #
   # @since 0.1.0
+  # rubocop:disable Metrics/ClassLength
   class Configuration
     # Default API base URL for Petstore API
     DEFAULT_BASE_URL = "https://petstore.swagger.io/v2"
@@ -289,9 +290,7 @@ module PetstoreApiClient
       strategies = []
 
       # Add API Key if configured
-      unless api_key.nil? || api_key.to_s.strip.empty?
-        strategies << Authentication::ApiKey.new(api_key)
-      end
+      strategies << Authentication::ApiKey.new(api_key) unless api_key.nil? || api_key.to_s.strip.empty?
 
       # Add OAuth2 if configured
       if oauth2_configured?
@@ -315,4 +314,5 @@ module PetstoreApiClient
         !@oauth2_client_secret.nil? && !@oauth2_client_secret.to_s.strip.empty?
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

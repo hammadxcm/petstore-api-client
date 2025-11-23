@@ -56,9 +56,7 @@ module PetstoreApiClient
       #
       # rubocop:disable Lint/MissingSuper
       def initialize(strategies = [])
-        unless strategies.is_a?(Array)
-          raise ArgumentError, "strategies must be an Array (got #{strategies.class})"
-        end
+        raise ArgumentError, "strategies must be an Array (got #{strategies.class})" unless strategies.is_a?(Array)
 
         validate_strategies!(strategies)
         @strategies = strategies

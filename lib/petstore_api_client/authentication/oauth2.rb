@@ -286,7 +286,7 @@ module PetstoreApiClient
       #
       def token_site
         uri = URI.parse(@token_url)
-        "#{uri.scheme}://#{uri.host}#{uri.port && uri.port != 80 && uri.port != 443 ? ":#{uri.port}" : ""}"
+        "#{uri.scheme}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != 80 && uri.port != 443}"
       end
 
       # Ensure we have a valid access token

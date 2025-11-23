@@ -324,7 +324,7 @@ RSpec.describe PetstoreApiClient::Authentication::OAuth2 do
       mock_client = double("OAuth2::Client")
       allow(auth).to receive(:build_oauth2_client).and_return(mock_client)
       allow(mock_client).to receive(:client_credentials).and_raise(
-        ::OAuth2::Error.new(double(status: 401, body: "Unauthorized"))
+        OAuth2::Error.new(double(status: 401, body: "Unauthorized"))
       )
 
       expect do
