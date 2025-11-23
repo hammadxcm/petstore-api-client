@@ -1,0 +1,43 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://petstore.swagger.io/v2/pet
+    body:
+      encoding: UTF-8
+      string: '{"id":12345678,"category":{"id":1,"name":"Dogs"},"name":"FidoTestDog","photoUrls":["https://example.com/photos/fido-1.jpg"],"tags":[{"id":10,"name":"friendly"}],"status":"available"}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      User-Agent:
+      - Faraday v2.14.0
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sun, 23 Nov 2025 09:50:37 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Headers:
+      - Content-Type, api_key, Authorization
+      Server:
+      - Jetty(9.2.9.v20150224)
+    body:
+      encoding: UTF-8
+      string: '{"id":12345678,"category":{"id":1,"name":"Dogs"},"name":"FidoTestDog","photoUrls":["https://example.com/photos/fido-1.jpg"],"tags":[{"id":10,"name":"friendly"}],"status":"available"}'
+  recorded_at: Sun, 23 Nov 2025 09:50:37 GMT
+recorded_with: VCR 6.3.1

@@ -1,0 +1,35 @@
+---
+http_interactions:
+- request:
+    method: put
+    uri: https://petstore.swagger.io/v2/pet
+    body:
+      encoding: UTF-8
+      string: '{"id":999999999,"category":{"id":1,"name":"Dogs"},"name":"FidoTestDog","photoUrls":["https://example.com/photos/fido-1.jpg"],"tags":[{"id":10,"name":"friendly"}],"status":"available"}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      User-Agent:
+      - Faraday v2.14.0
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - application/json
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Headers:
+      - Content-Type, api_key, Authorization
+    body:
+      encoding: UTF-8
+      string: '{"code":404,"type":"NotFound","message":"Pet not found"}'
+  recorded_at: Sun, 23 Nov 2025 09:50:40 GMT
+recorded_with: VCR 6.3.1
