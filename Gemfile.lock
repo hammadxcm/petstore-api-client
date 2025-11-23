@@ -2,8 +2,8 @@ PATH
   remote: .
   specs:
     petstore_api_client (0.1.0)
-      activemodel (>= 6.0)
-      activesupport (>= 6.0)
+      activemodel (>= 6.0, < 9.0)
+      activesupport (>= 6.0, < 9.0)
       faraday (~> 2.0)
       faraday-retry (~> 2.0)
       oauth2 (~> 2.0)
@@ -163,7 +163,7 @@ DEPENDENCIES
   irb
   petstore_api_client!
   rake (~> 13.0)
-  rspec (~> 3.12, ~> 3.0)
+  rspec (~> 3.12)
   rubocop (~> 1.21)
   simplecov (~> 0.22)
   vcr (~> 6.0)
