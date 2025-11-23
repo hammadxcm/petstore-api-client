@@ -1,6 +1,6 @@
 # 🐾 Petstore API Client
 
-[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%203.0.0-ruby.svg?style=flat-square&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
+[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%203.2.0-ruby.svg?style=flat-square&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Tests](https://img.shields.io/badge/tests-454%20passing-success.svg?style=flat-square)](https://rspec.info/)
 [![Coverage](https://img.shields.io/badge/coverage-96.91%25-brightgreen.svg?style=flat-square)](https://github.com/hammadxcm/petstore-api-client)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -45,12 +45,30 @@ pet = client.create_pet(
 
 ## 📦 Installation
 
-```bash
-# Gemfile
-gem 'petstore_api_client'
+### From RubyGems (Recommended)
 
-# Install
+```ruby
+# Gemfile
+gem 'petstore_api_client', '~> 0.1.0'
+```
+
+Then install:
+
+```bash
 bundle install
+```
+
+### From Source
+
+```ruby
+# Gemfile
+gem 'petstore_api_client', github: 'hammadxcm/petstore-api-client'
+```
+
+### Direct Installation
+
+```bash
+gem install petstore_api_client
 ```
 
 ## 🔐 Authentication
@@ -169,6 +187,241 @@ config.auth_strategy = :none  # No auth headers
 | ✅ **Secure Logging**        | API keys masked in output (e.g., `spec****`) |
 | ✅ **Token Auto-Refresh**    | OAuth2 tokens refreshed 60s before expiry    |
 | ✅ **Thread-Safe**           | Mutex-protected token management             |
+
+## 🚂 Rails Integration
+
+### Installation in Rails
+
+Add to your `Gemfile`:
+
+```ruby
+gem 'petstore_api_client', '~> 0.1.0'
+```
+
+Install:
+
+```bash
+bundle install
+```
+
+### Configuration with Initializer
+
+Create `config/initializers/petstore_api_client.rb`:
+
+```ruby
+# config/initializers/petstore_api_client.rb
+
+PetstoreApiClient.configure do |config|
+  # Base configuration
+  config.base_url = ENV.fetch('PETSTORE_API_URL', 'https://petstore.swagger.io/v2')
+  config.timeout = 30
+  config.open_timeout = 10
+
+  # Authentication - choose one strategy
+  config.auth_strategy = :oauth2  # or :api_key, :both, :none
+
+  # OAuth2 configuration (if using oauth2 or both)
+  config.oauth2_client_id = ENV['PETSTORE_OAUTH2_CLIENT_ID']
+  config.oauth2_client_secret = ENV['PETSTORE_OAUTH2_CLIENT_SECRET']
+  config.oauth2_token_url = ENV['PETSTORE_OAUTH2_TOKEN_URL']
+  config.oauth2_scope = 'read:pets write:pets'
+
+  # API Key configuration (if using api_key or both)
+  config.api_key = ENV['PETSTORE_API_KEY']
+
+  # Retry configuration
+  config.max_retries = 3
+  config.retry_statuses = [503, 429]
+
+  # Pagination defaults
+  config.default_page_size = 25
+end
+```
+
+### Usage in Rails Controllers
+
+```ruby
+# app/controllers/pets_controller.rb
+class PetsController < ApplicationController
+  before_action :initialize_client
+
+  def index
+    @pets = @client.find_pets_by_status('available')
+    render json: @pets
+  rescue PetstoreApiClient::ApiError => e
+    render json: { error: e.message }, status: :bad_gateway
+  end
+
+  def show
+    @pet = @client.get_pet(params[:id])
+    render json: @pet
+  rescue PetstoreApiClient::NotFoundError => e
+    render json: { error: 'Pet not found' }, status: :not_found
+  end
+
+  def create
+    @pet = @client.create_pet(pet_params)
+    render json: @pet, status: :created
+  rescue PetstoreApiClient::ValidationError => e
+    render json: { errors: e.message }, status: :unprocessable_entity
+  end
+
+  def update
+    @pet = @client.update_pet(params[:id], pet_params)
+    render json: @pet
+  rescue PetstoreApiClient::NotFoundError => e
+    render json: { error: 'Pet not found' }, status: :not_found
+  end
+
+  def destroy
+    @client.delete_pet(params[:id])
+    head :no_content
+  rescue PetstoreApiClient::NotFoundError => e
+    render json: { error: 'Pet not found' }, status: :not_found
+  end
+
+  private
+
+  def initialize_client
+    @client = PetstoreApiClient::ApiClient.new
+  end
+
+  def pet_params
+    params.require(:pet).permit(:name, :status, photo_urls: [], tags: [:id, :name])
+  end
+end
+```
+
+### Usage in Rails Models/Services
+
+```ruby
+# app/services/pet_sync_service.rb
+class PetSyncService
+  def initialize
+    @client = PetstoreApiClient::ApiClient.new
+  end
+
+  def sync_available_pets
+    pets = @client.find_pets_by_status('available')
+
+    pets.each do |pet_data|
+      Pet.find_or_create_by(external_id: pet_data['id']) do |pet|
+        pet.name = pet_data['name']
+        pet.status = pet_data['status']
+        pet.photo_urls = pet_data['photoUrls']
+      end
+    end
+
+    pets.count
+  rescue PetstoreApiClient::ApiError => e
+    Rails.logger.error("Pet sync failed: #{e.message}")
+    raise
+  end
+
+  def create_remote_pet(local_pet)
+    @client.create_pet(
+      name: local_pet.name,
+      photo_urls: local_pet.photo_urls,
+      status: local_pet.status,
+      tags: local_pet.tags.map { |tag| { name: tag.name } }
+    )
+  end
+end
+```
+
+### Background Jobs (Sidekiq/ActiveJob)
+
+```ruby
+# app/jobs/pet_sync_job.rb
+class PetSyncJob < ApplicationJob
+  queue_as :default
+  retry_on PetstoreApiClient::RateLimitError, wait: :polynomially_longer
+  discard_on PetstoreApiClient::AuthenticationError
+
+  def perform
+    client = PetstoreApiClient::ApiClient.new
+    pets = client.find_pets_by_status('available')
+
+    Rails.logger.info "Synced #{pets.count} pets from Petstore API"
+  end
+end
+```
+
+### Environment Variables (.env)
+
+```bash
+# .env or .env.local
+PETSTORE_API_URL=https://petstore.swagger.io/v2
+PETSTORE_OAUTH2_CLIENT_ID=your-client-id
+PETSTORE_OAUTH2_CLIENT_SECRET=your-client-secret
+PETSTORE_OAUTH2_TOKEN_URL=https://petstore.swagger.io/oauth/token
+PETSTORE_API_KEY=special-key
+```
+
+### Rails Credentials (Encrypted)
+
+```bash
+# Edit credentials
+EDITOR=vim rails credentials:edit
+```
+
+```yaml
+# config/credentials.yml.enc
+petstore:
+  oauth2_client_id: your-client-id
+  oauth2_client_secret: your-secret
+  api_key: special-key
+```
+
+Access in initializer:
+
+```ruby
+# config/initializers/petstore_api_client.rb
+PetstoreApiClient.configure do |config|
+  credentials = Rails.application.credentials.petstore
+
+  config.oauth2_client_id = credentials[:oauth2_client_id]
+  config.oauth2_client_secret = credentials[:oauth2_client_secret]
+  config.api_key = credentials[:api_key]
+end
+```
+
+### Testing with RSpec
+
+```ruby
+# spec/services/pet_sync_service_spec.rb
+require 'rails_helper'
+
+RSpec.describe PetSyncService do
+  let(:client) { instance_double(PetstoreApiClient::ApiClient) }
+  let(:service) { described_class.new }
+
+  before do
+    allow(PetstoreApiClient::ApiClient).to receive(:new).and_return(client)
+  end
+
+  describe '#sync_available_pets' do
+    it 'syncs pets from API' do
+      pets_data = [
+        { 'id' => 1, 'name' => 'Fluffy', 'status' => 'available', 'photoUrls' => [] }
+      ]
+
+      allow(client).to receive(:find_pets_by_status)
+        .with('available')
+        .and_return(pets_data)
+
+      expect { service.sync_available_pets }.to change(Pet, :count).by(1)
+    end
+
+    it 'handles API errors gracefully' do
+      allow(client).to receive(:find_pets_by_status)
+        .and_raise(PetstoreApiClient::ApiError, 'API is down')
+
+      expect { service.sync_available_pets }.to raise_error(PetstoreApiClient::ApiError)
+    end
+  end
+end
+```
 
 ## ⚙️ Configuration
 
