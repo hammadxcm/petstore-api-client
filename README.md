@@ -7,11 +7,24 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-hammadxcm-181717.svg?style=flat-square&logo=github)](https://github.com/hammadxcm)
 
+---
+
+# ⚠️ AI USAGE DISCLOSURE
+
+## **NO AI was used for CORE CODE**
+
+**AI was ONLY used for:**
+- 📝 Documentation (README, guides)
+- 📚 YARD documentation comments
+- 🔧 Minor code refactoring
+
+**ALL core functionality, architecture, business logic, implementation, and test coverage were developed by me from scratch.**
+
+---
+
 > Production-ready Ruby client for the Swagger Petstore API with OAuth2 support, automatic retries, and comprehensive validation.
 >
 > **Author:** Hammad Khan ([@hammadxcm](https://github.com/hammadxcm))
->
-> **Note:** All architecture, business logic, implementation, and test coverage were developed by me from scratch. AI tools were used solely to enhance documentation and code comments.
 
 ## 📑 Table of Contents
 
