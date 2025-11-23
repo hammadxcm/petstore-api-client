@@ -25,8 +25,8 @@ module PetstoreApiClient
     end
 
     # Delegate enumerable methods to data array
-    def each(&block)
-      data.each(&block)
+    def each(&)
+      data.each(&)
     end
 
     # Number of items in current page
