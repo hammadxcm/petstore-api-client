@@ -16,6 +16,7 @@
 ## 📑 Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
+- [⚡ Quick Copy-Paste Test Commands](#-quick-copy-paste-test-commands)
 - [✨ Features](#-features)
 - [📦 Installation](#-installation)
   - [From RubyGems (Recommended)](#from-rubygems-recommended)
@@ -39,6 +40,7 @@
   - [Rails Console Testing](#rails-console-testing)
   - [Rails App Integration Test](#rails-app-integration-test)
 - [⚙️ Configuration](#️-configuration)
+- [🔄 Request Lifecycle](#-request-lifecycle)
 - [🔄 Auto-Retry & Rate Limiting](#-auto-retry--rate-limiting)
 - [📚 Usage Examples](#-usage-examples)
 - [🛡️ Error Handling](#️-error-handling)
@@ -70,6 +72,107 @@ pet = client.create_pet(
 )
 ```
 
+## ⚡ Quick Copy-Paste Test Commands
+
+### 🔹 One-Liner Installation Test
+```bash
+# Install and verify in one command
+gem install petstore_api_client && ruby -e "require 'petstore_api_client'; puts '✅ Gem installed! Version: ' + PetstoreApiClient::VERSION"
+```
+
+### 🔹 Quick Ruby Test (Copy entire block)
+```ruby
+# Paste this entire block into IRB or Ruby console
+require 'petstore_api_client'
+client = PetstoreApiClient::ApiClient.new
+pet = client.create_pet(name: "QuickTest", photo_urls: ["https://example.com/test.jpg"], status: "available")
+puts "✅ Created pet: #{pet['name']} (ID: #{pet['id']})"
+client.delete_pet(pet['id'])
+puts "✅ Cleanup complete!"
+```
+
+### 🔹 Rails Console Quick Test (Copy entire block)
+```ruby
+# Paste this entire block into Rails console
+require 'petstore_api_client'
+client = PetstoreApiClient::ApiClient.new
+client.configure { |c| c.timeout = 30 }
+pet = client.create_pet(name: "RailsTest-#{Time.now.to_i}", photo_urls: ["https://example.com/rails.jpg"], status: "available")
+puts "✅ Pet created! ID: #{pet['id']}, Name: #{pet['name']}"
+fetched = client.get_pet(pet['id'])
+puts "✅ Pet fetched! Status: #{fetched['status']}"
+client.delete_pet(pet['id'])
+puts "✅ Test complete!"
+```
+
+### 🔹 Full CRUD Test (Copy entire block)
+```ruby
+# Complete CRUD operations test - paste this entire block
+require 'petstore_api_client'
+client = PetstoreApiClient::ApiClient.new
+
+# CREATE
+puts "1️⃣  CREATE..."
+pet = client.create_pet(name: "TestPet-#{rand(1000)}", photo_urls: ["https://example.com/photo.jpg"], status: "available")
+pet_id = pet['id']
+puts "   ✅ Created: #{pet['name']} (ID: #{pet_id})"
+
+# READ
+puts "2️⃣  READ..."
+fetched = client.get_pet(pet_id)
+puts "   ✅ Fetched: #{fetched['name']}"
+
+# UPDATE
+puts "3️⃣  UPDATE..."
+updated = client.update_pet(pet_id, status: 'sold')
+puts "   ✅ Updated status to: #{updated['status']}"
+
+# DELETE
+puts "4️⃣  DELETE..."
+client.delete_pet(pet_id)
+puts "   ✅ Deleted pet #{pet_id}"
+
+puts "🎉 All CRUD operations successful!"
+```
+
+### 🔹 Authentication Test (OAuth2)
+```ruby
+# Test OAuth2 authentication - paste this entire block
+require 'petstore_api_client'
+client = PetstoreApiClient::ApiClient.new
+client.configure do |config|
+  config.auth_strategy = :oauth2
+  config.oauth2_client_id = ENV['PETSTORE_OAUTH2_CLIENT_ID'] || 'test-client'
+  config.oauth2_client_secret = ENV['PETSTORE_OAUTH2_CLIENT_SECRET'] || 'test-secret'
+end
+puts "✅ OAuth2 configured"
+puts "   Strategy: #{client.config.auth_strategy}"
+puts "   Client ID: #{client.config.oauth2_client_id}"
+```
+
+### 🔹 Error Handling Test
+```ruby
+# Test error handling - paste this entire block
+require 'petstore_api_client'
+client = PetstoreApiClient::ApiClient.new
+
+# Test NotFoundError
+begin
+  client.get_pet(999999999)
+rescue PetstoreApiClient::NotFoundError => e
+  puts "✅ NotFoundError caught correctly"
+end
+
+# Test ValidationError
+begin
+  client.create_pet(name: "", photo_urls: [])
+rescue PetstoreApiClient::ValidationError => e
+  puts "✅ ValidationError caught correctly"
+end
+
+puts "🎉 Error handling works!"
+```
+
 ## ✨ Features
 
 | Feature                    | Description                                |
@@ -85,7 +188,8 @@ pet = client.create_pet(
 
 ## 📦 Installation
 
-### From RubyGems (Recommended)
+<details open>
+<summary><b>📥 From RubyGems (Recommended)</b></summary>
 
 ```ruby
 # Gemfile
@@ -98,18 +202,26 @@ Then install:
 bundle install
 ```
 
-### From Source
+</details>
+
+<details>
+<summary><b>📥 From Source</b></summary>
 
 ```ruby
 # Gemfile
 gem 'petstore_api_client', github: 'hammadxcm/petstore-api-client'
 ```
 
-### Direct Installation
+</details>
+
+<details>
+<summary><b>📥 Direct Installation</b></summary>
 
 ```bash
 gem install petstore_api_client
 ```
+
+</details>
 
 ## 🔐 Authentication
 
@@ -134,7 +246,8 @@ graph TD
     style F fill:#f3e5f5
 ```
 
-### 🔑 API Key Authentication
+<details>
+<summary><b>🔑 API Key Authentication</b></summary>
 
 ```ruby
 client = PetstoreApiClient::ApiClient.new
@@ -152,7 +265,10 @@ export PETSTORE_API_KEY="your-key"
 config.api_key = :from_env  # Loads from PETSTORE_API_KEY
 ```
 
-### 🎫 OAuth2 Authentication
+</details>
+
+<details>
+<summary><b>🎫 OAuth2 Authentication</b></summary>
 
 ```ruby
 client.configure do |config|
@@ -195,7 +311,10 @@ export PETSTORE_OAUTH2_TOKEN_URL="https://custom.com/token"  # Optional
 export PETSTORE_OAUTH2_SCOPE="read:pets write:pets"         # Optional
 ```
 
-### 🔀 Dual Authentication (Both)
+</details>
+
+<details>
+<summary><b>🔀 Dual Authentication (Both)</b></summary>
 
 Send **both** API Key and OAuth2 headers simultaneously:
 
@@ -212,11 +331,16 @@ end
 # - Authorization: Bearer {access_token}
 ```
 
-### 🚫 No Authentication
+</details>
+
+<details>
+<summary><b>🚫 No Authentication</b></summary>
 
 ```ruby
 config.auth_strategy = :none  # No auth headers
 ```
+
+</details>
 
 ### 🔒 Security Features
 
@@ -229,6 +353,43 @@ config.auth_strategy = :none  # No auth headers
 | ✅ **Thread-Safe**           | Mutex-protected token management             |
 
 ## 🚂 Rails Integration
+
+```mermaid
+graph TB
+    subgraph "Rails Application"
+        A[config/initializers/<br/>petstore_api_client.rb] -->|Global Config| B[PetstoreApiClient]
+        C[.env / credentials] -->|Env Vars| A
+
+        B --> D[Controllers]
+        B --> E[Services/Models]
+        B --> F[Background Jobs]
+
+        D --> G[PetsController]
+        E --> H[PetSyncService]
+        F --> I[PetSyncJob]
+
+        G -->|create_pet| J[ApiClient]
+        H -->|sync_available_pets| J
+        I -->|Async sync| J
+    end
+
+    subgraph "Gem Layer"
+        J --> K[Authentication<br/>Strategy]
+        J --> L[Retry<br/>Middleware]
+        J --> M[Rate Limit<br/>Handler]
+    end
+
+    subgraph "External API"
+        K --> N[Petstore API]
+        L --> N
+        M --> N
+    end
+
+    style A fill:#e1f5ff
+    style B fill:#c8e6c9
+    style J fill:#fff3e0
+    style N fill:#f3e5f5
+```
 
 ### Installation in Rails
 
@@ -244,7 +405,8 @@ Install:
 bundle install
 ```
 
-### Configuration with Initializer
+<details>
+<summary><b>📋 Configuration with Initializer</b></summary>
 
 Create `config/initializers/petstore_api_client.rb`:
 
@@ -278,7 +440,10 @@ PetstoreApiClient.configure do |config|
 end
 ```
 
-### Usage in Rails Controllers
+</details>
+
+<details>
+<summary><b>📋 Usage in Rails Controllers</b></summary>
 
 ```ruby
 # app/controllers/pets_controller.rb
@@ -332,7 +497,10 @@ class PetsController < ApplicationController
 end
 ```
 
-### Usage in Rails Models/Services
+</details>
+
+<details>
+<summary><b>📋 Usage in Rails Models/Services</b></summary>
 
 ```ruby
 # app/services/pet_sync_service.rb
@@ -369,7 +537,10 @@ class PetSyncService
 end
 ```
 
-### Background Jobs (Sidekiq/ActiveJob)
+</details>
+
+<details>
+<summary><b>📋 Background Jobs (Sidekiq/ActiveJob)</b></summary>
 
 ```ruby
 # app/jobs/pet_sync_job.rb
@@ -387,7 +558,10 @@ class PetSyncJob < ApplicationJob
 end
 ```
 
-### Environment Variables (.env)
+</details>
+
+<details>
+<summary><b>📋 Environment Variables (.env)</b></summary>
 
 ```bash
 # .env or .env.local
@@ -398,7 +572,10 @@ PETSTORE_OAUTH2_TOKEN_URL=https://petstore.swagger.io/oauth/token
 PETSTORE_API_KEY=special-key
 ```
 
-### Rails Credentials (Encrypted)
+</details>
+
+<details>
+<summary><b>📋 Rails Credentials (Encrypted)</b></summary>
 
 ```bash
 # Edit credentials
@@ -426,7 +603,10 @@ PetstoreApiClient.configure do |config|
 end
 ```
 
-### Testing with RSpec
+</details>
+
+<details>
+<summary><b>📋 Testing with RSpec</b></summary>
 
 ```ruby
 # spec/services/pet_sync_service_spec.rb
@@ -463,6 +643,8 @@ RSpec.describe PetSyncService do
 end
 ```
 
+</details>
+
 ## 🧪 Testing Gem Installation
 
 ### Quick Verification
@@ -485,6 +667,9 @@ Expected output:
 petstore_api_client (0.1.0)
 0.1.0
 ```
+
+<details>
+<summary><b>📋 Rails Console Testing (Detailed Examples)</b></summary>
 
 ### Rails Console Testing
 
@@ -609,6 +794,11 @@ end
 # Success! ✅ Pagination working
 ```
 
+</details>
+
+<details>
+<summary><b>📋 Rails App Integration Test (Detailed Example)</b></summary>
+
 ### Rails App Integration Test
 
 Create a test controller to verify full integration:
@@ -719,6 +909,11 @@ Expected response:
 
 ✅ **Success!** If both requests work, the gem is fully integrated with your Rails app!
 
+</details>
+
+<details>
+<summary><b>📋 Troubleshooting & Performance Testing</b></summary>
+
 ### Troubleshooting
 
 **Gem not found:**
@@ -787,6 +982,8 @@ puts "Average: #{(time * 100).round(2)}ms per request"
 - ✅ API requests complete successfully
 - ✅ Performance is acceptable
 
+</details>
+
 ## ⚙️ Configuration
 
 <details>
@@ -817,6 +1014,66 @@ client.configure do |config|
   config.retry_enabled = true
   config.max_retries = 3
 end
+```
+
+## 🔄 Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant App as Your Application
+    participant Client as ApiClient
+    participant Auth as Auth Strategy
+    participant Retry as Retry Middleware
+    participant API as Petstore API
+
+    App->>Client: create_pet(data)
+
+    Note over Client: 1. Validate Input
+    Client->>Client: Validate required fields
+
+    Note over Client,Auth: 2. Authentication
+    Client->>Auth: apply(request)
+
+    alt OAuth2 Strategy
+        Auth->>Auth: Check token expiry
+        alt Token expired/missing
+            Auth->>API: POST /oauth/token
+            API-->>Auth: access_token
+            Auth->>Auth: Cache token
+        end
+        Auth->>Auth: Add Authorization header
+    else API Key Strategy
+        Auth->>Auth: Add api_key header
+    end
+
+    Note over Client,Retry: 3. Send Request
+    Client->>Retry: execute(request)
+    Retry->>API: POST /pet
+
+    alt Success (2xx)
+        API-->>Retry: 200 OK + Pet data
+        Retry-->>Client: Pet response
+        Client-->>App: Pet object
+    else Rate Limited (429)
+        API-->>Retry: 429 Too Many Requests
+        Note over Retry: Wait + exponential backoff
+        Retry->>API: Retry request
+        API-->>Retry: 200 OK
+        Retry-->>Client: Pet response
+        Client-->>App: Pet object
+    else Server Error (5xx)
+        API-->>Retry: 503 Service Unavailable
+        Note over Retry: Retry with backoff
+        Retry->>API: Retry request
+        API-->>Retry: 200 OK
+        Retry-->>Client: Pet response
+        Client-->>App: Pet object
+    else Client Error (4xx)
+        API-->>Retry: 404 Not Found
+        Retry-->>Client: Error response
+        Client->>Client: Raise NotFoundError
+        Client-->>App: Exception
+    end
 ```
 
 ## 🔄 Auto-Retry & Rate Limiting
@@ -855,7 +1112,8 @@ end
 
 ## 📚 Usage Examples
 
-### 🐕 Pet Management
+<details>
+<summary><b>📋 Pet Management (CRUD Operations)</b></summary>
 
 ```ruby
 # Create
@@ -888,7 +1146,10 @@ pets = client.pets.find_by_status("available", page: 1, per_page: 10)
 pets = client.pets.find_by_tags(["friendly", "vaccinated"])
 ```
 
-### 🛒 Store Orders
+</details>
+
+<details>
+<summary><b>📋 Store Orders</b></summary>
 
 ```ruby
 # Create order
@@ -906,7 +1167,10 @@ order = client.get_order(987)
 client.delete_order(987)
 ```
 
-### 📄 Pagination
+</details>
+
+<details>
+<summary><b>📋 Pagination Examples</b></summary>
 
 ```ruby
 pets = client.pets.find_by_status("available", page: 1, per_page: 25)
@@ -924,6 +1188,8 @@ pets.last_page?  # => false
 pets.each { |pet| puts pet.name }
 pets.map(&:id)
 ```
+
+</details>
 
 ## 🛡️ Error Handling
 
@@ -1030,6 +1296,9 @@ open coverage/index.html  # Mac
 xdg-open coverage/index.html  # Linux
 ```
 
+<details>
+<summary><b>📋 Interactive Console & Development Setup</b></summary>
+
 ### 🎮 Interactive Console
 
 **IRB Console (Pre-configured):**
@@ -1073,20 +1342,68 @@ Then in Rails console:
 rails console
 ```
 
+**Test with all authentication strategies:**
+
 ```ruby
-# Create client with API Key
+# =====================================
+# Strategy 1: No Authentication (:none)
+# =====================================
 client = PetstoreApiClient::ApiClient.new
 client.configure do |config|
-  config.api_key = ENV['PETSTORE_API_KEY']
-  # or
-  config.api_key = :from_env
+  config.auth_strategy = :none
 end
-
-# Test it
 pet = client.create_pet(
-  name: "RailsPet",
+  name: "RailsPet-NoAuth-#{Time.now.to_i}",
   photo_urls: ["https://example.com/rails-pet.jpg"]
 )
+puts "✅ Created with :none auth: #{pet['name']}"
+
+# =====================================
+# Strategy 2: API Key Authentication
+# =====================================
+client = PetstoreApiClient::ApiClient.new
+client.configure do |config|
+  config.auth_strategy = :api_key
+  config.api_key = ENV['PETSTORE_API_KEY']  # or 'special-key'
+  # Alternative: config.api_key = :from_env (reads from PETSTORE_API_KEY)
+end
+pet = client.create_pet(
+  name: "RailsPet-ApiKey-#{Time.now.to_i}",
+  photo_urls: ["https://example.com/rails-pet.jpg"]
+)
+puts "✅ Created with :api_key auth: #{pet['name']}"
+
+# =====================================
+# Strategy 3: OAuth2 Authentication
+# =====================================
+client = PetstoreApiClient::ApiClient.new
+client.configure do |config|
+  config.auth_strategy = :oauth2
+  config.oauth2_client_id = ENV['PETSTORE_OAUTH2_CLIENT_ID']
+  config.oauth2_client_secret = ENV['PETSTORE_OAUTH2_CLIENT_SECRET']
+  config.oauth2_scope = 'read:pets write:pets'  # Optional
+end
+pet = client.create_pet(
+  name: "RailsPet-OAuth2-#{Time.now.to_i}",
+  photo_urls: ["https://example.com/rails-pet.jpg"]
+)
+puts "✅ Created with :oauth2 auth: #{pet['name']}"
+
+# =====================================
+# Strategy 4: Dual Authentication (:both)
+# =====================================
+client = PetstoreApiClient::ApiClient.new
+client.configure do |config|
+  config.auth_strategy = :both
+  config.api_key = ENV['PETSTORE_API_KEY']
+  config.oauth2_client_id = ENV['PETSTORE_OAUTH2_CLIENT_ID']
+  config.oauth2_client_secret = ENV['PETSTORE_OAUTH2_CLIENT_SECRET']
+end
+pet = client.create_pet(
+  name: "RailsPet-Both-#{Time.now.to_i}",
+  photo_urls: ["https://example.com/rails-pet.jpg"]
+)
+puts "✅ Created with :both auth: #{pet['name']}"
 ```
 
 **Option 2: Load from Local Path**
@@ -1204,6 +1521,8 @@ https://github.com/hammadxcm/petstore-api-client/actions
 [![CI](https://github.com/hammadxcm/petstore-api-client/workflows/CI/badge.svg)](https://github.com/hammadxcm/petstore-api-client/actions)
 ```
 
+</details>
+
 ## 📋 API Coverage
 
 | Endpoint            | Method | Client Method                  |
@@ -1224,7 +1543,8 @@ https://github.com/hammadxcm/petstore-api-client/actions
 - 📘 Authentication guide is included above (see Authentication section)
 - 🚩 Feature flags documented above (see Auth Strategies)
 
-## 🏗️ Design Principles
+<details>
+<summary><b>🏗️ Design Principles</b></summary>
 
 ✅ **SOLID** - Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion
 ✅ **Strategy Pattern** - Swappable authentication strategies
@@ -1233,7 +1553,10 @@ https://github.com/hammadxcm/petstore-api-client/actions
 ✅ **Composite Pattern** - Combine multiple auth strategies
 ✅ **Null Object** - None authenticator for consistent interface
 
-## 📦 Dependencies
+</details>
+
+<details>
+<summary><b>📦 Dependencies</b></summary>
 
 **Runtime:**
 - `faraday` (~> 2.0) - HTTP client
@@ -1246,7 +1569,10 @@ https://github.com/hammadxcm/petstore-api-client/actions
 - `vcr` (~> 6.0) - HTTP recording
 - `simplecov` (~> 0.22) - Coverage
 
-## 🤝 Contributing
+</details>
+
+<details>
+<summary><b>🤝 Contributing</b></summary>
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -1268,6 +1594,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Follow existing code style
 - Update documentation
 - Keep commits focused and atomic
+
+</details>
 
 ## 📄 License
 
