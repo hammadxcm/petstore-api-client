@@ -1,0 +1,36 @@
+# Code Owners for Petstore API Client
+# These users will be automatically requested for review when PRs are opened
+
+# Default owners for everything in the repo
+* @hammadxcm
+
+# Authentication system
+/lib/petstore_api_client/authentication/ @hammadxcm
+/spec/authentication/ @hammadxcm
+
+# Core API client
+/lib/petstore_api_client/client.rb @hammadxcm
+/lib/petstore_api_client/api_client.rb @hammadxcm
+/lib/petstore_api_client/configuration.rb @hammadxcm
+
+# Models
+/lib/petstore_api_client/models/ @hammadxcm
+/spec/models/ @hammadxcm
+
+# Client endpoints
+/lib/petstore_api_client/clients/ @hammadxcm
+/spec/clients/ @hammadxcm
+
+# CI/CD and configuration
+/.github/ @hammadxcm
+/Gemfile @hammadxcm
+/petstore_api_client.gemspec @hammadxcm
+/.rubocop.yml @hammadxcm
+
+# Documentation
+/README.md @hammadxcm
+/CONTRIBUTORS.md @hammadxcm
+
+# Security-sensitive files
+/.gitignore @hammadxcm
+/.env.example @hammadxcm

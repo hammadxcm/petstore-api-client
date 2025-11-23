@@ -1,0 +1,157 @@
+# Petstore API Client - CI/CD Pipeline
+# Author: Hammad Khan (@hammadxcm)
+# Repository: https://github.com/hammadxcm/petstore-api-client
+
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test:
+    name: Tests (Ruby ${{ matrix.ruby }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.0', '3.1', '3.2', '3.3']
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 💎 Set up Ruby ${{ matrix.ruby }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+
+    - name: 📦 Install dependencies
+      run: bundle install --jobs 4 --retry 3
+
+    - name: 🧪 Run tests
+      run: bundle exec rspec
+
+    - name: 📊 Upload coverage (Ruby 3.3 only)
+      if: matrix.ruby == '3.3'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/
+
+  lint:
+    name: RuboCop
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 💎 Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    - name: 📦 Install dependencies
+      run: bundle install --jobs 4 --retry 3
+
+    - name: 🔍 Run RuboCop
+      run: bundle exec rubocop
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 💎 Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    - name: 🔒 Run bundle audit
+      run: |
+        gem install bundler-audit
+        bundle audit check --update
+
+  build:
+    name: Build Gem
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 💎 Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    - name: 📦 Build gem
+      run: gem build petstore_api_client.gemspec
+
+    - name: 📤 Upload gem artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: petstore-api-client-gem
+        path: '*.gem'
+
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 💎 Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    - name: 📦 Install dependencies
+      run: bundle install
+
+    - name: 🧪 Run tests with coverage
+      run: bundle exec rspec
+
+    - name: 📊 Check coverage threshold
+      run: |
+        COVERAGE=$(ruby -e "require 'json'; data = JSON.parse(File.read('coverage/.last_run.json')); puts data['result']['line']")
+        echo "Coverage: $COVERAGE%"
+        if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+          echo "❌ Coverage $COVERAGE% is below 95% threshold"
+          exit 1
+        fi
+        echo "✅ Coverage $COVERAGE% meets threshold"
+
+  report:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, build, coverage]
+    if: always()
+
+    steps:
+    - name: 📋 Generate summary
+      run: |
+        echo "## 🎯 CI/CD Pipeline Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Linting | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Coverage | ${{ needs.coverage.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY

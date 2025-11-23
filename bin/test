@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Petstore API Client - Quick Test Script
+# Run this from project root: ./bin/test
+
+echo "🐾 Petstore API Client - Test Suite"
+echo "===================================="
+echo ""
+
+# Check if bundle is installed
+if ! command -v bundle &> /dev/null; then
+    echo "❌ Bundler not found. Please install: gem install bundler"
+    exit 1
+fi
+
+# Check if dependencies are installed
+if [ ! -d "vendor/bundle" ] && [ ! -d ".bundle" ]; then
+    echo "📦 Installing dependencies..."
+    bundle install
+    echo ""
+fi
+
+# Run tests
+echo "🧪 Running test suite..."
+echo ""
+bundle exec rspec --format progress
+
+# Check exit code
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ All tests passed!"
+    echo ""
+    echo "📊 Coverage report: coverage/index.html"
+    echo "🔍 Run linter: bundle exec rubocop"
+else
+    echo ""
+    echo "❌ Tests failed!"
+    exit 1
+fi
