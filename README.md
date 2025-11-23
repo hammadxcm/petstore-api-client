@@ -1,5 +1,6 @@
 # 🐾 Petstore API Client
 
+[![Gem Version](https://badge.fury.io/rb/petstore_api_client.svg)](https://badge.fury.io/rb/petstore_api_client)
 [![Ruby](https://img.shields.io/badge/ruby-%3E%3D%203.2.0-ruby.svg?style=flat-square&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Tests](https://img.shields.io/badge/tests-454%20passing-success.svg?style=flat-square)](https://rspec.info/)
 [![Coverage](https://img.shields.io/badge/coverage-96.91%25-brightgreen.svg?style=flat-square)](https://github.com/hammadxcm/petstore-api-client)
