@@ -13,6 +13,45 @@
 >
 > **Note:** All architecture, business logic, implementation, and test coverage were developed by me from scratch. AI tools were used solely to enhance documentation and code comments.
 
+## 📑 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+  - [From RubyGems (Recommended)](#from-rubygems-recommended)
+  - [From Source](#from-source)
+  - [Direct Installation](#direct-installation)
+- [🔐 Authentication](#-authentication)
+  - [🔑 API Key Authentication](#-api-key-authentication)
+  - [🎫 OAuth2 Authentication](#-oauth2-authentication)
+  - [🔀 Dual Authentication (Both)](#-dual-authentication-both)
+- [🚂 Rails Integration](#-rails-integration)
+  - [Installation in Rails](#installation-in-rails)
+  - [Configuration with Initializer](#configuration-with-initializer)
+  - [Usage in Rails Controllers](#usage-in-rails-controllers)
+  - [Usage in Rails Models/Services](#usage-in-rails-modelsservices)
+  - [Background Jobs (Sidekiq/ActiveJob)](#background-jobs-sidekiqactivejob)
+  - [Environment Variables (.env)](#environment-variables-env)
+  - [Rails Credentials (Encrypted)](#rails-credentials-encrypted)
+  - [Testing with RSpec](#testing-with-rspec)
+- [🧪 Testing Gem Installation](#-testing-gem-installation)
+  - [Quick Verification](#quick-verification)
+  - [Rails Console Testing](#rails-console-testing)
+  - [Rails App Integration Test](#rails-app-integration-test)
+- [⚙️ Configuration](#️-configuration)
+- [🔄 Auto-Retry & Rate Limiting](#-auto-retry--rate-limiting)
+- [📚 Usage Examples](#-usage-examples)
+- [🛡️ Error Handling](#️-error-handling)
+- [🏛️ Architecture](#️-architecture)
+- [🧪 Testing](#-testing)
+- [📋 API Coverage](#-api-coverage)
+- [📖 Documentation](#-documentation)
+- [🏗️ Design Principles](#️-design-principles)
+- [📦 Dependencies](#-dependencies)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [💬 Support & Contact](#-support--contact)
+
 ## 🚀 Quick Start
 
 ```ruby
@@ -423,6 +462,330 @@ RSpec.describe PetSyncService do
   end
 end
 ```
+
+## 🧪 Testing Gem Installation
+
+### Quick Verification
+
+After installing the gem, verify it's working correctly:
+
+```bash
+# Install the gem
+gem install petstore_api_client
+
+# Verify installation
+gem list petstore_api_client
+
+# Check version
+ruby -e "require 'petstore_api_client'; puts PetstoreApiClient::VERSION"
+```
+
+Expected output:
+```
+petstore_api_client (0.1.0)
+0.1.0
+```
+
+### Rails Console Testing
+
+#### 1. Add Gem to Rails App
+
+```ruby
+# Gemfile
+gem 'petstore_api_client', '~> 0.1.0'
+```
+
+```bash
+bundle install
+```
+
+#### 2. Test in Rails Console
+
+```bash
+rails console
+```
+
+**Basic Connectivity Test:**
+
+```ruby
+# Load the gem
+require 'petstore_api_client'
+
+# Create a client (using default configuration)
+client = PetstoreApiClient::ApiClient.new
+
+# Test basic functionality - get a pet by ID
+# Note: Petstore API has some demo pets available
+pet = client.get_pet(1)
+puts "Pet Name: #{pet['name']}"
+puts "Status: #{pet['status']}"
+
+# Success! ✅ If you see pet data, the gem is working
+```
+
+**Configuration Test:**
+
+```ruby
+# Test with custom configuration
+PetstoreApiClient.configure do |config|
+  config.timeout = 60
+  config.auth_strategy = :api_key
+  config.api_key = 'special-key'  # Petstore demo API key
+end
+
+# Create client with configuration
+client = PetstoreApiClient::ApiClient.new
+
+# Verify configuration was applied
+puts "Timeout: #{client.config.timeout}"
+puts "Auth Strategy: #{client.config.auth_strategy}"
+
+# Test authenticated request
+client.get_pet(1)
+# Success! ✅ Configuration is working
+```
+
+**CRUD Operations Test:**
+
+```ruby
+# CREATE - Add a new pet
+new_pet = client.create_pet(
+  name: "Rails Test Pet",
+  photo_urls: ["https://example.com/photo.jpg"],
+  status: "available",
+  tags: [{ name: "test" }]
+)
+
+puts "Created Pet ID: #{new_pet['id']}"
+pet_id = new_pet['id']
+
+# READ - Get the pet we just created
+pet = client.get_pet(pet_id)
+puts "Retrieved Pet: #{pet['name']}"
+
+# UPDATE - Change the pet's status
+updated_pet = client.update_pet(pet_id, status: 'sold')
+puts "Updated Status: #{updated_pet['status']}"
+
+# DELETE - Remove the pet
+client.delete_pet(pet_id)
+puts "Pet deleted successfully!"
+
+# Success! ✅ All CRUD operations working
+```
+
+**Error Handling Test:**
+
+```ruby
+# Test error handling with invalid ID
+begin
+  client.get_pet(999999999)
+rescue PetstoreApiClient::NotFoundError => e
+  puts "✅ NotFoundError caught correctly: #{e.message}"
+end
+
+# Test validation error
+begin
+  client.create_pet(name: "", photo_urls: [])  # Invalid data
+rescue PetstoreApiClient::ValidationError => e
+  puts "✅ ValidationError caught correctly: #{e.message}"
+end
+
+# Success! ✅ Error handling is working
+```
+
+**Pagination Test:**
+
+```ruby
+# Test finding pets by status with pagination
+available_pets = client.find_pets_by_status('available')
+puts "Found #{available_pets.count} available pets"
+
+# Show first few pets
+available_pets.first(3).each do |pet|
+  puts "- #{pet['name']} (ID: #{pet['id']})"
+end
+
+# Success! ✅ Pagination working
+```
+
+### Rails App Integration Test
+
+Create a test controller to verify full integration:
+
+#### 1. Generate Test Controller
+
+```bash
+rails generate controller PetTest index create
+```
+
+#### 2. Update Controller
+
+```ruby
+# app/controllers/pet_test_controller.rb
+class PetTestController < ApplicationController
+  before_action :initialize_client
+
+  # GET /pet_test
+  def index
+    @pets = @client.find_pets_by_status('available')
+    render json: {
+      success: true,
+      count: @pets.count,
+      pets: @pets.first(5)
+    }
+  rescue PetstoreApiClient::ApiError => e
+    render json: { success: false, error: e.message }, status: :bad_gateway
+  end
+
+  # POST /pet_test
+  def create
+    @pet = @client.create_pet(
+      name: params[:name] || "Test Pet #{Time.now.to_i}",
+      photo_urls: [params[:photo_url] || "https://example.com/pet.jpg"],
+      status: params[:status] || "available"
+    )
+
+    render json: {
+      success: true,
+      message: "Pet created successfully",
+      pet: @pet
+    }, status: :created
+  rescue PetstoreApiClient::ValidationError => e
+    render json: { success: false, errors: e.message }, status: :unprocessable_entity
+  rescue PetstoreApiClient::ApiError => e
+    render json: { success: false, error: e.message }, status: :bad_gateway
+  end
+
+  private
+
+  def initialize_client
+    @client = PetstoreApiClient::ApiClient.new
+  end
+end
+```
+
+#### 3. Add Routes
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  get 'pet_test', to: 'pet_test#index'
+  post 'pet_test', to: 'pet_test#create'
+end
+```
+
+#### 4. Start Rails Server
+
+```bash
+rails server
+```
+
+#### 5. Test Endpoints
+
+**Test GET request:**
+```bash
+curl http://localhost:3000/pet_test
+```
+
+Expected response:
+```json
+{
+  "success": true,
+  "count": 10,
+  "pets": [...]
+}
+```
+
+**Test POST request:**
+```bash
+curl -X POST http://localhost:3000/pet_test \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Fluffy","status":"available"}'
+```
+
+Expected response:
+```json
+{
+  "success": true,
+  "message": "Pet created successfully",
+  "pet": {
+    "id": 12345,
+    "name": "Fluffy",
+    "status": "available"
+  }
+}
+```
+
+✅ **Success!** If both requests work, the gem is fully integrated with your Rails app!
+
+### Troubleshooting
+
+**Gem not found:**
+```bash
+# Verify gem is installed
+bundle list | grep petstore_api_client
+
+# Reinstall if needed
+bundle install
+```
+
+**Configuration not loading:**
+```bash
+# Check if initializer was loaded
+rails runner "puts PetstoreApiClient.configuration.inspect"
+```
+
+**Connection errors:**
+```ruby
+# Test network connectivity
+require 'net/http'
+uri = URI('https://petstore.swagger.io/v2/pet/1')
+response = Net::HTTP.get_response(uri)
+puts response.code  # Should be "200"
+```
+
+**SSL certificate errors:**
+```ruby
+# Temporarily disable SSL verification (development only!)
+require 'openssl'
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+```
+
+### Performance Testing
+
+Test gem performance in Rails console:
+
+```ruby
+require 'benchmark'
+
+client = PetstoreApiClient::ApiClient.new
+
+# Single request benchmark
+time = Benchmark.realtime do
+  client.get_pet(1)
+end
+puts "Single request: #{(time * 1000).round(2)}ms"
+
+# Multiple requests benchmark
+time = Benchmark.realtime do
+  10.times { client.get_pet(1) }
+end
+puts "10 requests: #{(time * 1000).round(2)}ms"
+puts "Average: #{(time * 100).round(2)}ms per request"
+```
+
+### Integration Test Checklist
+
+- ✅ Gem installs without errors
+- ✅ Basic client initialization works
+- ✅ Configuration can be set globally
+- ✅ CRUD operations function correctly
+- ✅ Error handling catches exceptions
+- ✅ Pagination returns results
+- ✅ Rails controller integration works
+- ✅ API requests complete successfully
+- ✅ Performance is acceptable
 
 ## ⚙️ Configuration
 
